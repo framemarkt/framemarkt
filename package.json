@@ -9,6 +9,9 @@
     "wrangler:static": "cp -r ./node_modules/frog/_lib/ui/.frog ./public/frog"
   },
   "dependencies": {
+    "axios": "^1.7.0",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.12.1",
     "frog": "latest",
     "hono": "^4",
     "viem": "^2.10.9"
