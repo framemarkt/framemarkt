@@ -26,6 +26,10 @@ export const fetchNft = async ({}: {
   let saleEndsAt = new Date();
   let canOffer = false;
   let image = "";
+  let parameters: any = null;
+  let signature: `0x${string}` = "0x";
+  let value: string = "0";
+  let protocolAddress: `0x${string}` = "0x";
 
   try {
     const { data } = await axios.get(openseaendpoint, {
@@ -48,8 +52,11 @@ export const fetchNft = async ({}: {
       description = nftData.description;
       ownerAddress = nftData.owners[0].address;
       image = nftData.image_url;
-      const price = data.orders[0].current_price;
-      priceEth = formatUnits(price, 18).toString();
+      value = data.orders[0].current_price;
+      priceEth = formatUnits(value as any, 18).toString();
+      signature = data.orders[0].protocol_data.signature;
+      parameters = data.orders[0].protocol_data.parameters;
+      protocolAddress = data.orders[0].protocol_address;
     }
   } catch (err) {
     console.log(err);
@@ -64,6 +71,10 @@ export const fetchNft = async ({}: {
     saleEndsAt,
     canOffer,
     ownerAddress,
+    parameters,
+    signature,
+    value,
+    protocolAddress,
   };
 };
 
