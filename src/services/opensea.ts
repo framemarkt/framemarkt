@@ -33,33 +33,31 @@ export const fetchNft = async ({
   let orderHash: `0x${string}` = "0x";
 
   try {
-    const { data } = await axios.get(openseaendpoint, {
-      headers,
-    });
+    const [orderResult, nftResult] = await Promise.all([
+      axios.get(openseaendpoint, {
+        headers,
+      }),
+      axios.get(nftEndpoint, {
+        headers,
+      }),
+    ]);
 
-    const {
-      data: { nft: nftData },
-    } = await axios.get(nftEndpoint, {
-      headers,
-    });
+    const { data: orderData } = orderResult;
+    const { data: nftData } = nftResult;
 
-    console.log(nftData);
-
-    console.log(data);
-
-    if (!data.orders || data.orders.length == 0) {
+    if (!orderData.orders || orderData.orders.length == 0) {
     } else {
       title = nftData.name;
       description = nftData.description;
       ownerAddress = nftData.owners[0].address;
       image = nftData.image_url;
-      value = data.orders[0].current_price;
+      value = orderData.orders[0].current_price;
       priceEth = formatUnits(value as any, 18).toString();
-      console.log(JSON.stringify(data.orders[0].protocol_data));
-      signature = data.orders[0].protocol_data.signature;
-      parameters = data.orders[0].protocol_data.parameters;
-      protocolAddress = data.orders[0].protocol_address;
-      orderHash = data.orders[0].order_hash;
+      console.log(JSON.stringify(orderData.orders[0].protocol_data));
+      signature = orderData.orders[0].protocol_data.signature;
+      parameters = orderData.orders[0].protocol_data.parameters;
+      protocolAddress = orderData.orders[0].protocol_address;
+      orderHash = orderData.orders[0].order_hash;
     }
   } catch (err) {
     console.log(err);
