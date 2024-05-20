@@ -3,7 +3,8 @@ import { devtools } from "frog/dev";
 import { serveStatic } from "frog/serve-static";
 import { neynar } from "frog/hubs";
 import { getAddress } from "viem";
-import { Box, Heading, Text, Image, VStack, vars } from "./ui";
+import { Box, Heading, Text, Image, VStack, HStack, vars } from "./ui";
+import { fetchNft } from "./services/opensea";
 
 export const app = new Frog({
   // Supply a Hub to enable frame verification.
@@ -11,9 +12,30 @@ export const app = new Frog({
   ui: { vars },
 });
 
-app.frame("/", (c) => {
+app.frame("/", async (c) => {
   const { req } = c;
   const params = new URLSearchParams(req.raw.url.slice(c.req.raw.url.indexOf("?")));
+
+  // opensea api call to get the nft data
+
+  const chain = params.get('chain');
+  const contract = params.get('contract');
+  const tokenId = params.get('tokenId');
+
+  // TODO: handle error if chain, contract, or tokenId is not provided
+  if (!chain || !contract || !tokenId) {
+    return c.res({
+      image: (
+        <div style={{ color: "white", display: "flex", fontSize: 60 }}>
+          Invalid Data
+        </div>
+      )
+    })
+  }
+
+
+  const nftData = await fetchNft({ chain, contract, tokenId: Number(tokenId) });
+
   return c.res({
     action: "/submit",
     image: (
@@ -22,27 +44,42 @@ app.frame("/", (c) => {
         alignVertical="center"
         alignHorizontal="center"
       >
-        <VStack gap="16" alignHorizontal="center">
+        <HStack>
           <Image src="/icon.png" width="128" />
-          <Heading size="32" weight="900" style="margin-top: 20px;">
-            Item To Sell
-          </Heading>
-        </VStack>
+          <VStack>
+            <Heading size="32" weight="900" style="margin-top: 20px;">
+              Item Title
+            </Heading>
+            <Text>
+              Owned by address
+            </Text>
+
+            <VStack gap="4">
+              <Text>Current price</Text>
+              <HStack gap="4">
+                <Text>0.1 ETH</Text>
+                <Text>$18.88</Text>
+              </HStack>
+            </VStack>
+          </VStack>
+        </HStack>
+
       </Box>
     ),
     intents: [
-      <TextInput placeholder="Price" />,
-      <Button.Transaction target="/mint">Purchase</Button.Transaction>,
+      // <TextInput placeholder="Price" />,
+      // <Button.Transaction target="/mint">Purchase</Button.Transaction>,
+      <Button.Transaction target="/purchase">Purchase</Button.Transaction>,
     ],
   });
 });
 
-app.frame("/submit", (c) => {
+app.frame("/purchase", (c) => {
   const { buttonValue } = c;
   return c.res({
     image: (
       <div style={{ color: "white", display: "flex", fontSize: 60 }}>
-        Selected: {buttonValue}
+        Purchased: {buttonValue}
       </div>
     ),
   });
@@ -50,17 +87,30 @@ app.frame("/submit", (c) => {
 
 
 
-// app.transaction("/buy", (c) => {
+
+
+// TODO: enable stage 2
+// app.transaction("/purchase", (c) => {
 //   const { address } = c;
-//   // Send transaction response.
-//   return c.contract({
-//     abi: ,
-//     chainId: "eip155:84532",
-//     to: "",
-//     functionName: "buy",
-//     args: [getAddress(address)],
-//   });
+
+//   return c.res({
+//     image: (
+//       <div style={{ color: "white", display: "flex", fontSize: 60 }}>
+//         Purchased: {address}
+//       </div>
+//     ),
+//   }
+//   )
+// })
+// Send transaction response.
+// return c.contract({
+//   abi: ,
+//   chainId: "eip155:84532",
+//   to: "",
+//   functionName: "buy",
+//   args: [getAddress(address)],
 // });
+
 
 const isCloudflareWorker = typeof caches !== "undefined";
 if (isCloudflareWorker) {
