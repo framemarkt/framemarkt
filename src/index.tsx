@@ -78,9 +78,14 @@ app.frame("/item", async (c) => {
     });
   }
 
-  if (urlParams?.length > 5 && urlParams?.includes("?contract")) {
+  if (
+    urlParams?.length > 5 &&
+    urlParams?.includes("contract=") &&
+    urlParams?.includes("tokenId=") &&
+    urlParams?.includes("chain=")
+  ) {
     // opensea api call to get the nft data
-    const params = new URLSearchParams(urlParams);
+    const params = new URLSearchParams(urlParams.replaceAll("amp;", ""));
     chain = params.get("chain") || "";
     contract = params.get("contract") || "";
     tokenId = params.get("tokenId") || "";
@@ -137,6 +142,11 @@ app.frame("/item", async (c) => {
         href={`https://opensea.io/assets/${chain}/${contract}/${tokenId}`}
       >
         OpenSea
+      </Button.Link>,
+      <Button.Link
+        href={`https://framemarkt.tre-dev.workers.dev/item?chain=${chain}&contract=${contract}&tokenId=${tokenId}`}
+      >
+        Share
       </Button.Link>,
       <Button.Transaction
         target={`/purchase?orderHash=${nftData.orderHash}&chain=${chain}`}
