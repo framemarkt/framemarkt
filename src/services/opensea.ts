@@ -9,9 +9,14 @@ export const fetchNft = async ({
 }) => {
   const title = "";
   const description = "";
+  const ownerAddress = "";
   const priceEth = 0;
   const priceUsd = 0;
   const saleEndsAt = new Date();
   const canOffer = false;
-  return { title, description, priceEth, priceUsd, saleEndsAt, canOffer };
+  return { title, description, priceEth, priceUsd, saleEndsAt, canOffer, ownerAddress };
 };
+
+export const fetchNftListing = async () => {
+  return [];
+}

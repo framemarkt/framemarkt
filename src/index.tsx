@@ -14,10 +14,21 @@ export const app = new Frog({
 
 app.frame("/", async (c) => {
   const { req } = c;
-  const params = new URLSearchParams(req.raw.url.slice(c.req.raw.url.indexOf("?")));
+  const urlParams = req.raw.url.slice(c.req.raw.url.indexOf("?"));
+  if (!urlParams) {
+    return c.res({
+      image: (
+        <div style={{ color: "white", display: "flex", fontSize: 60 }}>
+          Invalid Data
+        </div>
+      )
+    })
+  }
+
+
 
   // opensea api call to get the nft data
-
+  const params = new URLSearchParams(urlParams);
   const chain = params.get('chain');
   const contract = params.get('contract');
   const tokenId = params.get('tokenId');
@@ -47,18 +58,19 @@ app.frame("/", async (c) => {
         <HStack>
           <Image src="/icon.png" width="128" />
           <VStack>
+            
             <Heading size="32" weight="900" style="margin-top: 20px;">
-              Item Title
+              {nftData.title || 'ITEM TITLE'}
             </Heading>
             <Text>
-              Owned by address
+              {nftData.ownerAddress || '0x123'}
             </Text>
 
             <VStack gap="4">
               <Text>Current price</Text>
               <HStack gap="4">
-                <Text>0.1 ETH</Text>
-                <Text>$18.88</Text>
+                <Text>{nftData.priceEth || '0.0001'} ETH</Text>
+                <Text>${nftData.priceUsd || '10.00'}</Text>
               </HStack>
             </VStack>
           </VStack>
@@ -69,7 +81,7 @@ app.frame("/", async (c) => {
     intents: [
       // <TextInput placeholder="Price" />,
       // <Button.Transaction target="/mint">Purchase</Button.Transaction>,
-      <Button.Transaction target="/purchase">Purchase</Button.Transaction>,
+      <Button.Transaction target="/purchase">Buy now</Button.Transaction>,
     ],
   });
 });
@@ -84,9 +96,6 @@ app.frame("/purchase", (c) => {
     ),
   });
 });
-
-
-
 
 
 // TODO: enable stage 2
