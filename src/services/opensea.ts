@@ -47,7 +47,7 @@ export const fetchNft = async ({}: {
       title = nftData.name;
       description = nftData.description;
       ownerAddress = nftData.owners[0].address;
-      image = nftData.opensea_url;
+      image = nftData.image_url;
       const price = data.orders[0].current_price;
       priceEth = formatUnits(price, 18).toString();
     }

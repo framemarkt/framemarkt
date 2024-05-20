@@ -5,6 +5,7 @@ import { neynar } from "frog/hubs";
 import { getAddress } from "viem";
 import { Box, Heading, Text, Image, VStack, HStack, vars } from "./ui";
 import { fetchNft } from "./services/opensea";
+import { convertAddress } from "./helpers";
 
 type State = {
   chain: string;
@@ -96,29 +97,36 @@ app.frame("/item", async (c) => {
 
   const nftData = await fetchNft({ chain, contract, tokenId: Number(tokenId) });
 
+  console.log(nftData);
+
   return c.res({
     action: "/submit",
     image: (
       <Box
         height="100%"
+        paddingTop="28"
+        paddingBottom="28"
+        paddingLeft="16"
+        paddingRight="16"
         alignVertical="center"
         alignHorizontal="center"
       >
-        <HStack>
-          <Image src="/icon.png" width="128" />
-          <VStack>
-
-            <Heading size="32" weight="900" style="margin-top: 20px;">
-              {nftData.title || 'ITEM TITLE'}
-            </Heading>
-            <Text>
-              {nftData.ownerAddress || '0x123'}
-            </Text>
+        <HStack gap="20" alignHorizontal="center" alignVertical="center">
+          <Image src={nftData.image} height={{custom: "90%"}} />
+          <VStack gap="24" alignVertical="center">
+            <VStack>
+              <Heading size="24" weight="900">
+                {nftData.title || 'ITEM TITLE'}
+              </Heading>
+              <Text>
+                Owned by {nftData.ownerAddress ? convertAddress(nftData.ownerAddress) : '0x123'}
+              </Text>
+            </VStack>
 
             <VStack gap="4">
               <Text>Current price</Text>
               <HStack gap="4">
-                <Text>{nftData.priceEth || '0.0001'} ETH</Text>
+                <Text size="24" weight="900">{nftData.priceEth || '0.0001'} ETH</Text>
                 <Text>${nftData.priceUsd || '10.00'}</Text>
               </HStack>
             </VStack>
@@ -128,8 +136,8 @@ app.frame("/item", async (c) => {
       </Box>
     ),
     intents: [
-      // <TextInput placeholder="Price" />,
-      // <Button.Transaction target="/mint">Purchase</Button.Transaction>,
+      <Button action="/">Generate</Button>,
+      <Button.Link href={`https://opensea.io/assets/${chain}/${contract}/${tokenId}`}>OpenSea</Button.Link>,
       <Button.Transaction target="/purchase">Buy now</Button.Transaction>,
     ],
   });
@@ -150,24 +158,14 @@ app.frame("/purchase", (c) => {
 // TODO: enable stage 2
 // app.transaction("/purchase", (c) => {
 //   const { address } = c;
-
-//   return c.res({
-//     image: (
-//       <div style={{ color: "white", display: "flex", fontSize: 60 }}>
-//         Purchased: {address}
-//       </div>
-//     ),
-//   }
-//   )
+//   return c.contract({
+//     abi: ,
+//     chainId: "eip155:84532",
+//     to: "",
+//     functionName: "buy",
+//     args: [getAddress(address)],
+//   });
 // })
-// Send transaction response.
-// return c.contract({
-//   abi: ,
-//   chainId: "eip155:84532",
-//   to: "",
-//   functionName: "buy",
-//   args: [getAddress(address)],
-// });
 
 
 const isCloudflareWorker = typeof caches !== "undefined";
