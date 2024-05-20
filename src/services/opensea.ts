@@ -28,27 +28,25 @@ export const fetchNft = async ({
   let image = "";
 
   try {
-    const { data } = await axios.get(openseaendpoint, {
-      headers,
-    });
+    const [orderResult, nftResult] = await Promise.all([
+      axios.get(openseaendpoint, {
+        headers,
+      }),
+      axios.get(nftEndpoint, {
+        headers,
+      }),
+    ]);
 
-    const {
-      data: { nft: nftData },
-    } = await axios.get(nftEndpoint, {
-      headers,
-    });
+    const { data: orderData } = orderResult;
+    const { data: nftData } = nftResult;
 
-    console.log(nftData);
-
-    console.log(data);
-
-    if (!data.orders || data.orders.length == 0) {
+    if (!orderData.orders || orderData.orders.length == 0) {
     } else {
-      title = nftData.name;
-      description = nftData.description;
-      ownerAddress = nftData.owners[0].address;
-      image = nftData.image_url;
-      const price = data.orders[0].current_price;
+      title = nftData.nft.name;
+      description = nftData.nft.description;
+      ownerAddress = nftData.nft.owners[0].address;
+      image = nftData.nft.image_url;
+      const price = orderData.orders[0].current_price;
       priceEth = formatUnits(price, 18).toString();
     }
   } catch (err) {

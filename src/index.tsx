@@ -27,12 +27,15 @@ app.frame("/", async (c) => {
   return c.res({
     image: (
       <Box
-        height="100%"
         alignVertical="center"
         alignHorizontal="center"
+        paddingLeft="12"
+        paddingRight="12"
+        paddingTop="56"
+        paddingBottom="56"
       >
         <div style={{ color: "white", display: "flex", fontSize: 60 }}>
-          Please enter the Opensea URL of the NFT you want to link below
+          Enter the Opensea URL of the NFT you want to link below
         </div>
       </Box>
     ),
@@ -72,7 +75,9 @@ app.frame("/item", async (c) => {
         <div style={{ color: "white", display: "flex", fontSize: 60 }}>
           Invalid Data
         </div>
-      )
+      ), intents: [
+        <Button action="/">Generate</Button>
+      ]
     })
   }
 
@@ -91,43 +96,39 @@ app.frame("/item", async (c) => {
         <div style={{ color: "white", display: "flex", fontSize: 60 }}>
           Invalid Data2
         </div>
-      )
+      ),
+      intents: [
+        <Button action="/">Generate</Button>
+      ]
     })
   }
 
   const nftData = await fetchNft({ chain, contract, tokenId: Number(tokenId) });
 
-  console.log(nftData);
-
   return c.res({
-    action: "/submit",
     image: (
       <Box
         height="100%"
-        paddingTop="28"
-        paddingBottom="28"
-        paddingLeft="16"
-        paddingRight="16"
         alignVertical="center"
         alignHorizontal="center"
       >
         <HStack gap="20" alignHorizontal="center" alignVertical="center">
-          <Image src={nftData.image} height={{custom: "90%"}} />
+          <Image src={nftData.image} height="192" />
           <VStack gap="24" alignVertical="center">
             <VStack>
               <Heading size="24" weight="900">
                 {nftData.title || 'ITEM TITLE'}
               </Heading>
-              <Text>
+              <Text color="gray900">
                 Owned by {nftData.ownerAddress ? convertAddress(nftData.ownerAddress) : '0x123'}
               </Text>
             </VStack>
 
             <VStack gap="4">
-              <Text>Current price</Text>
-              <HStack gap="4">
+              <Text color="gray900">Current price</Text>
+              <HStack gap="8">
                 <Text size="24" weight="900">{nftData.priceEth || '0.0001'} ETH</Text>
-                <Text>${nftData.priceUsd || '10.00'}</Text>
+                <Text color="gray900">${nftData.priceUsd || '150.00'}</Text>
               </HStack>
             </VStack>
           </VStack>
