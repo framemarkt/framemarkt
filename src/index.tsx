@@ -6,16 +6,66 @@ import { getAddress } from "viem";
 import { Box, Heading, Text, Image, VStack, HStack, vars } from "./ui";
 import { fetchNft } from "./services/opensea";
 
-export const app = new Frog({
+type State = {
+  chain: string;
+  contract: string;
+  tokenId: number;
+}
+
+export const app = new Frog<{ State: State }>({
   // Supply a Hub to enable frame verification.
   // hub: neynar({ apiKey: "NEYNAR_FROG_FM" }),
+  initialState: { chain: "", contract: "", tokenId: 0 },
   ui: { vars },
 });
 
+
 app.frame("/", async (c) => {
+  const state = c.deriveState()
+
+  return c.res({
+    image: (
+      <Box
+        height="100%"
+        alignVertical="center"
+        alignHorizontal="center"
+      >
+        <div style={{ color: "white", display: "flex", fontSize: 60 }}>
+          Please enter the Opensea URL of the NFT you want to link below
+        </div>
+      </Box>
+    ),
+    intents: [
+      <TextInput placeholder="Opensea URL" />,
+      <Button action="/item">Generate</Button>,
+    ],
+  });
+})
+
+app.frame("/item", async (c) => {
   const { req } = c;
+
+  let chain = '';
+  let contract = '';
+  let tokenId = '';
+
+  // Given via /
+  const inputUrl = c.frameData?.inputText
+
+  // TODO
+  // Check that inputUrl is a valid format
+  //  https://opensea.io/assets/ethereum/0x9a74559843f7721f69651eca916b780ef78bd060/5207
+  if (inputUrl) {
+    // format
+    // https://opensea.io/assets/:chain/:contract/:tokenId
+    const splitUrl = inputUrl.split("/");
+    chain = splitUrl[4];
+    contract = splitUrl[5];
+    tokenId = splitUrl[6];
+  }
+
   const urlParams = req.raw.url.slice(c.req.raw.url.indexOf("?"));
-  if (!urlParams) {
+  if (urlParams?.length <= 5 && (inputUrl?.length ?? 0) <= 5) {
     return c.res({
       image: (
         <div style={{ color: "white", display: "flex", fontSize: 60 }}>
@@ -25,25 +75,24 @@ app.frame("/", async (c) => {
     })
   }
 
-
-
-  // opensea api call to get the nft data
-  const params = new URLSearchParams(urlParams);
-  const chain = params.get('chain');
-  const contract = params.get('contract');
-  const tokenId = params.get('tokenId');
+  if (urlParams?.length > 5 && urlParams?.includes("?contract")) {
+    // opensea api call to get the nft data
+    const params = new URLSearchParams(urlParams);
+    chain = params.get('chain') || '';
+    contract = params.get('contract') || '';
+    tokenId = params.get('tokenId') || '';
+  }
 
   // TODO: handle error if chain, contract, or tokenId is not provided
   if (!chain || !contract || !tokenId) {
     return c.res({
       image: (
         <div style={{ color: "white", display: "flex", fontSize: 60 }}>
-          Invalid Data
+          Invalid Data2
         </div>
       )
     })
   }
-
 
   const nftData = await fetchNft({ chain, contract, tokenId: Number(tokenId) });
 
@@ -58,7 +107,7 @@ app.frame("/", async (c) => {
         <HStack>
           <Image src="/icon.png" width="128" />
           <VStack>
-            
+
             <Heading size="32" weight="900" style="margin-top: 20px;">
               {nftData.title || 'ITEM TITLE'}
             </Heading>
