@@ -4,17 +4,17 @@ import { formatUnits } from "viem";
 
 const openseaBaseUrl = "https://api.opensea.io/api/v2";
 
-export const fetchNft = async ({}: {
+export const fetchNft = async ({
+  chain,
+  contract,
+  tokenId,
+}: {
   chain?: string;
   contract: string;
   tokenId: number;
 }) => {
-  const chain = "ethereum";
-  const contractAddress = "0x7aada103f7852c7e7da61e100d6277a3fd199b58";
-  const token_id = "696";
-
-  const openseaendpoint = `${openseaBaseUrl}/orders/${chain}/seaport/listings?asset_contract_address=${contractAddress}&token_ids=${token_id}`;
-  const nftEndpoint = `${openseaBaseUrl}/chain/${chain}/contract/${contractAddress}/nfts/${token_id}`;
+  const openseaendpoint = `${openseaBaseUrl}/orders/${chain}/seaport/listings?asset_contract_address=${contract}&token_ids=${tokenId}`;
+  const nftEndpoint = `${openseaBaseUrl}/chain/${chain}/contract/${contract}/nfts/${tokenId}`;
 
   const headers = { "x-api-key": OPENSEA_API_KEY };
 
