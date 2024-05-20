@@ -44,13 +44,13 @@ export const fetchNft = async ({
 
     const { data: orderData } = orderResult;
     const { data: nftData } = nftResult;
-
+    
     if (!orderData.orders || orderData.orders.length == 0) {
     } else {
-      title = nftData.name;
-      description = nftData.description;
-      ownerAddress = nftData.owners[0].address;
-      image = nftData.image_url;
+      title = nftData.nft.name;
+      description = nftData.nft.description;
+      ownerAddress = nftData.nft.owners[0].address;
+      image = nftData.nft.image_url;
       value = orderData.orders[0].current_price;
       priceEth = formatUnits(value as any, 18).toString();
       console.log(JSON.stringify(orderData.orders[0].protocol_data));
