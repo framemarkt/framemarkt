@@ -1,8 +1,6 @@
 import { Button, Frog, TextInput } from "frog";
 import { devtools } from "frog/dev";
 import { serveStatic } from "frog/serve-static";
-import { neynar } from "frog/hubs";
-import { getAddress } from "viem";
 import { Box, Heading, Text, Image, VStack, HStack, vars } from "./ui";
 import { fetchNft, fulfillOrder } from "./services/opensea";
 import { convertAddress } from "./helpers";
@@ -140,19 +138,36 @@ app.frame("/item", async (c) => {
       >
         OpenSea
       </Button.Link>,
-      <Button.Transaction target="/purchase">Buy now</Button.Transaction>,
+      <Button.Transaction
+        target={`/purchase?orderHash=${nftData.orderHash}&chain=${chain}`}
+      >
+        Buy now
+      </Button.Transaction>,
     ],
   });
 });
 
 app.transaction("/purchase", async (c) => {
-  console.log("A");
-  // const { address, req } = c;
+  const { address, req } = c;
 
-  const orderHash =
-    "0x8d27375164d399cd1b17d4bd663da69ed856523a7c230be80d36f98dd5630ca8";
-  const { address } = c;
-  const chain = "optimism";
+  let orderHash: string = "";
+  let chain: string = "";
+
+  const urlParams = req.raw.url.slice(c.req.raw.url.indexOf("?"));
+  console.log(urlParams);
+  if (urlParams?.length < 2) {
+    return c.error({
+      message: "Invalid Data",
+    });
+  }
+
+  if (urlParams?.length >= 2 && urlParams?.includes("?orderHash")) {
+    // opensea api call to get the nft data
+    const params = new URLSearchParams(urlParams.replaceAll("amp;", ""));
+    chain = params.get("chain") || "";
+    orderHash = params.get("orderHash") || "";
+  }
+
   const {
     fulfillment_data: { transaction },
   } = await fulfillOrder(orderHash, chain, address);
