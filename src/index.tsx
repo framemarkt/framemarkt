@@ -4,14 +4,15 @@ import { serveStatic } from "frog/serve-static";
 import { neynar } from "frog/hubs";
 import { getAddress } from "viem";
 import { Box, Heading, Text, Image, VStack, HStack, vars } from "./ui";
-import { fetchNft } from "./services/opensea";
+import { fetchNft, fulfillOrder } from "./services/opensea";
 import { convertAddress } from "./helpers";
+import opensea from "./abis/opensea";
 
 type State = {
   chain: string;
   contract: string;
   tokenId: number;
-}
+};
 
 export const app = new Frog<{ State: State }>({
   // Supply a Hub to enable frame verification.
@@ -20,9 +21,8 @@ export const app = new Frog<{ State: State }>({
   ui: { vars },
 });
 
-
 app.frame("/", async (c) => {
-  const state = c.deriveState()
+  const state = c.deriveState();
 
   return c.res({
     image: (
@@ -44,17 +44,17 @@ app.frame("/", async (c) => {
       <Button action="/item">Generate</Button>,
     ],
   });
-})
+});
 
 app.frame("/item", async (c) => {
   const { req } = c;
 
-  let chain = '';
-  let contract = '';
-  let tokenId = '';
+  let chain = "";
+  let contract = "";
+  let tokenId = "";
 
   // Given via /
-  const inputUrl = c.frameData?.inputText
+  const inputUrl = c.frameData?.inputText;
 
   // TODO
   // Check that inputUrl is a valid format
@@ -75,10 +75,9 @@ app.frame("/item", async (c) => {
         <div style={{ color: "white", display: "flex", fontSize: 60 }}>
           Invalid Data
         </div>
-      ), intents: [
-        <Button action="/">Generate</Button>
-      ]
-    })
+      ),
+      intents: [<Button action="/">Generate</Button>],
+    });
   }
 
   if (urlParams?.length > 5 && urlParams?.includes("contract=") && urlParams?.includes("tokenId=") && urlParams?.includes("chain=")){
@@ -98,43 +97,41 @@ app.frame("/item", async (c) => {
           Invalid Data2
         </div>
       ),
-      intents: [
-        <Button action="/">Generate</Button>
-      ]
-    })
+      intents: [<Button action="/">Generate</Button>],
+    });
   }
 
   const nftData = await fetchNft({ chain, contract, tokenId: Number(tokenId) });
 
   return c.res({
     image: (
-      <Box
-        height="100%"
-        alignVertical="center"
-        alignHorizontal="center"
-      >
+      <Box height="100%" alignVertical="center" alignHorizontal="center">
         <HStack gap="20" alignHorizontal="center" alignVertical="center">
           <Image src={nftData.image} height="192" />
           <VStack gap="24" alignVertical="center">
             <VStack>
               <Heading size="24" weight="900">
-                {nftData.title || 'ITEM TITLE'}
+                {nftData.title || "ITEM TITLE"}
               </Heading>
               <Text color="gray900">
-                Owned by {nftData.ownerAddress ? convertAddress(nftData.ownerAddress) : '0x123'}
+                Owned by{" "}
+                {nftData.ownerAddress
+                  ? convertAddress(nftData.ownerAddress)
+                  : "0x123"}
               </Text>
             </VStack>
 
             <VStack gap="4">
               <Text color="gray900">Current price</Text>
               <HStack gap="8">
-                <Text size="24" weight="900">{nftData.priceEth || '0.0001'} ETH</Text>
-                <Text color="gray900">${nftData.priceUsd || '150.00'}</Text>
+                <Text size="24" weight="900">
+                  {nftData.priceEth || "0.0001"} ETH
+                </Text>
+                <Text color="gray900">${nftData.priceUsd || "150.00"}</Text>
               </HStack>
             </VStack>
           </VStack>
         </HStack>
-
       </Box>
     ),
     intents: [
@@ -146,30 +143,32 @@ app.frame("/item", async (c) => {
   });
 });
 
-app.frame("/purchase", (c) => {
-  const { buttonValue } = c;
-  return c.res({
-    image: (
-      <div style={{ color: "white", display: "flex", fontSize: 60 }}>
-        Purchased: {buttonValue}
-      </div>
-    ),
+app.transaction("/purchase", async (c) => {
+  console.log("A");
+  // const { address, req } = c;
+
+  const orderHash =
+    "0x8d27375164d399cd1b17d4bd663da69ed856523a7c230be80d36f98dd5630ca8";
+  const { address } = c;
+  const chain = "optimism";
+  const {
+    fulfillment_data: { transaction },
+  } = await fulfillOrder(orderHash, chain, address);
+  const chainId = `eip155:${transaction.chain}` as any;
+  let rawFunc = transaction.function;
+  if (rawFunc.indexOf("(") !== -1) {
+    rawFunc = rawFunc.slice(0, rawFunc.indexOf("("));
+  }
+
+  return c.contract({
+    abi: opensea,
+    chainId,
+    to: transaction.to as any,
+    value: transaction.value as any,
+    functionName: rawFunc as any,
+    args: Object.values(transaction.input_data) as any,
   });
 });
-
-
-// TODO: enable stage 2
-// app.transaction("/purchase", (c) => {
-//   const { address } = c;
-//   return c.contract({
-//     abi: ,
-//     chainId: "eip155:84532",
-//     to: "",
-//     functionName: "buy",
-//     args: [getAddress(address)],
-//   });
-// })
-
 
 const isCloudflareWorker = typeof caches !== "undefined";
 if (isCloudflareWorker) {
